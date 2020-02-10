@@ -1,0 +1,89 @@
+import pandas as pd
+import numpy as np
+
+# Specifying the number of elements in a row 
+n = 100
+
+# Diagnol Elements of the Tri-diagnol matrix
+# B = main diagnol matrix of Tri-diagnol matrix
+B = np.zeros((1,n))
+p = np.linspace(0,(n-1), num=n, endpoint=False)
+#Main Daignol Elements, Satisfying conditions of k(i,i) for i=1..99 
+np.put(B,[p],2)
+#Satisfying the Main Diagnol Condition , k(100,100)=1
+np.put(B,[99],1)
+
+# Off-Diagnol elements of a matrix
+# C = off-diagnol matrix
+# m specifies the number of off-diagnol elements 
+# Off-diagnol elements are one less than the main diagnol elements
+m = (n-1)
+C = np.zeros((1,n))
+m = np.linspace(0,m, num=m, endpoint=False)
+np.put(C,[m],-1)
+
+# Right Hand Side Vectors to be specified 
+# First Right Hand side vector is 
+D = np.zeros((1,n))
+p = np.linspace(0,(n-1), num=n, endpoint=False)
+np.put(D,[p], 0)
+np.put(D,[99],1)
+
+# Right Hand Side Vectors to be specified 
+# Second Right Hand side vector is 
+E = np.zeros((1,n))
+p = np.linspace(0,(n-1), num=n, endpoint=False)
+np.put(E,[p], 0)
+np.put(E,[0],1)
+
+# Concatenate all the row matrix into one Matrix A 
+#C.shape
+#B.shape
+#D.shape
+#E.shape
+A = np.concatenate([C,B,D,E])
+(m,n) = A.shape
+from scipy.sparse import diags
+diagnols = [A[1,:], A[0,:], A[0,:]]
+k = diags(diagnols, [0,-1,1]).toarray()
+#k.shape
+from numpy.linalg import inv
+k_inverse = inv(np.matrix(k))
+#The value of X for first right hand side vector[]
+X1 = A[2 , : ] * k_inverse
+X1.shape
+#The value of X for second right hand side vector
+X2= A[3, :]* k_inverse
+X2.shape
+
+#To check Output
+X2
+
+#Second Method
+#Now , we will also perform the operations to calculate the values of X
+#without taking
+#inverse of the matrix
+#X1 corresponds to the value of 1st Right Hand Side Vector
+#X2 corresponds to the value of 2nd Right Hand Side Vector
+alpha = np.zeros((1,n))
+beta1 = np.zeros((1,n))
+beta2 = np.zeros((1,n))
+X1 = np.zeros((n,1))
+X2 = np.zeros((n,1))
+
+alpha[0,0] = A[1,0]
+beta1[0,0] = A[2,0]
+beta2[0,0] = A[3,0]
+for j in range(1,99,1):
+    alpha[0,j] = (A[1,j] - ((A[0,j]*A[0,j])/(alpha[0,(j-1)])))
+    beta1[0,j] = (A[2,j] - ((beta1[0,(j-1)]*A[0,(j-1)])/alpha[0,(j-1)]))
+    beta2[0,j] = (A[3,j] - ((beta2[0,(j-1)]*A[0,(j-1)])/alpha[0,(j-1)]))
+
+X1[99,0] = 100 
+X2[99,0] = 1
+for j in range(98,-1,-1):
+    X1[j,0] = beta1[0,j] - A[0,j]*X1[(j+1),0]/alpha[0,j]
+    X2[j,0] = beta2[0,j] - A[0,j]*X2[(j+1),0]/alpha[0,j]
+
+#To check the Output
+X1
